@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function Usage()
+{
+	echo -e "cmpsum : Compare two files by MD5 checksum"
+	printf "%42s\n" " " | tr " " "="
+	echo -e "cmpsum [file1] [file2]\n"
+	echo -e "If sums are the same, the exit code is 0, if different, 1"
+	echo -e "If this menu is called, or there is an error, the exit code"
+	echo -e "will be 127"
+}
+
+#
+# Main Loop
+#
+
+if [ $#0 -lt 3 ]; then
+	Usage
+else
+	file2="x~~"
+
+	file1=$(md5sum "$1" | cut -d" " -f1)
+	file2=$(md5sum "$2" | cut -d" " -f1)
+
+	if [ ! "${file2}" = "x~~" -a ${file1} = ${file2} ]; then
+		exit 0
+	elif [ ! "${file2}" = "x~~" ]; then
+		exit 1
+	fi
+fi
+
+exit 127
