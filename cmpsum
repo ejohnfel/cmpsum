@@ -1,9 +1,16 @@
 #!/bin/bash
 
+verbose=false
+target1=""
+target2=""
+retval=127
+
 function Usage()
 {
 	echo -e "cmpsum : Compare two files by MD5 checksum"
 	printf "%42s\n" " " | tr " " "="
+	echo -e "-h\tThis Menu"
+	echo -e "-v\tVerbose"
 	echo -e "cmpsum [file1] [file2]\n"
 	echo -e "If sums are the same, the exit code is 0, if different, 1"
 	echo -e "If this menu is called, or there is an error, the exit code"
@@ -14,19 +21,41 @@ function Usage()
 # Main Loop
 #
 
+declare -a targets
+count=0
+
 if [ $#0 -lt 3 ]; then
 	Usage
 else
+	while [ ! "$1" = "" ]; do
+		case "$1" in
+		"-h")	Usage
+			exit 0 ;;
+		"-v")	verbose=true ;;
+		*)
+			targets[${count}]=$1
+			count=$(( ${count} + 1 ))
+			;;
+		esac
+
+		shift 1
+	done
+
 	file2="x~~"
 
-	file1=$(md5sum "$1" | cut -d" " -f1)
-	file2=$(md5sum "$2" | cut -d" " -f1)
+	file1=$(md5sum "${targets[0]}" | cut -d" " -f1)
+	file2=$(md5sum "${targets[1]}" | cut -d" " -f1)
 
-	if [ ! "${file2}" = "x~~" -a ${file1} = ${file2} ]; then
-		exit 0
+	[ "${verbose}" = "true" ] && echo -e "${file1}\t${targets[0]}\n${file2}\t${targets[1]}"
+
+	if [ ! "${file2}" = "x~~" -a "${file1}" = "${file2}" ]; then
+		[ "${verbose}" = "true" ] && echo "${targets[0]} matches ${targets[1]}"
+
+		retval=0
 	elif [ ! "${file2}" = "x~~" ]; then
-		exit 1
+		[ "${verbose}" = "true" ] && echo -e "${targets[0]} does not match ${targets[1]}"
+		retval=1
 	fi
 fi
 
-exit 127
+exit ${retval}
